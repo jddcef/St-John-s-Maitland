@@ -1,0 +1,31 @@
+{
+  "$schema": "https://playground.wordpress.net/blueprint-schema.json",
+  "login": true,
+  "phpVersion": "8.2",
+  "wordPressVersion": "latest",
+  "landingPage": "/",
+  "steps": [
+    {
+      "step": "installPlugin",
+      "pluginZipFile": {
+        "resource": "url",
+        "url": "https://raw.githubusercontent.com/jddcef/St-John-s-Maitland/main/playground/parish-liturgical-calendar.zip"
+      }
+    },
+    {
+      "step": "setSiteOptions",
+      "options": {
+        "blogname": "St John's Maitland",
+        "blogdescription": "A Catholic Parish Community",
+        "timezone_string": "Africa/Johannesburg",
+        "plc_parish_name": "St John's Catholic Church, Maitland",
+        "plc_show_mass_times": "1",
+        "plc_mass_times_text": "<strong>Saturday</strong> 17:30 &bull; <strong>Sunday</strong> 08:00 &amp; 10:00 &bull; <strong>Weekdays</strong> 07:30"
+      }
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php\nrequire_once('/wordpress/wp-load.php');\n\n// Create sample upcoming parish events\n$events = [\n    [\n        'title'    => 'Palm Sunday Mass',\n        'content'  => 'Join us for the solemn blessing of palms and procession before the Mass of the Lord\\'s Passion.',\n        'date'     => date('Y-m-d', strtotime('+5 days')),\n        'time'     => '09:00',\n        'location' => 'Main Church'\n    ],\n    [\n        'title'    => 'Stations of the Cross',\n        'content'  => 'A prayerful walk through the fourteen stations, led by the parish youth group.',\n        'date'     => date('Y-m-d', strtotime('+9 days')),\n        'time'     => '17:30',\n        'location' => 'Main Church'\n    ],\n    [\n        'title'    => 'Easter Vigil',\n        'content'  => 'The greatest night of the year. We welcome new members into the Church through Baptism and Confirmation.',\n        'date'     => date('Y-m-d', strtotime('+13 days')),\n        'time'     => '20:00',\n        'location' => 'Main Church'\n    ],\n    [\n        'title'    => 'Easter Sunday Mass',\n        'content'  => 'Alleluia! Christ is risen. Join us for a joyful celebration of the Resurrection.',\n        'date'     => date('Y-m-d', strtotime('+14 days')),\n        'time'     => '09:00',\n        'location' => 'Main Church'\n    ],\n    [\n        'title'    => 'First Communion Preparation Morning',\n        'content'  => 'Families of candidates are warmly invited.',\n        'date'     => date('Y-m-d', strtotime('+28 days')),\n        'time'     => '10:00',\n        'location' => 'Parish Hall'\n    ]\n];\n\nforeach ($events as $ev) {\n    $id = wp_insert_post([\n        'post_title'   => $ev['title'],\n        'post_content' => $ev['content'],\n        'post_status'  => 'publish',\n        'post_type'    => 'parish_event'\n    ]);\n    if ($id && !is_wp_error($id)) {\n        update_post_meta($id, '_plc_event_date',     $ev['date']);\n        update_post_meta($id, '_plc_event_time',     $ev['time']);\n        update_post_meta($id, '_plc_event_location', $ev['location']);\n    }\n}\n\n// Create the home page containing the parish dashboard shortcode\n$home_id = wp_insert_post([\n    'post_title'   => 'Welcome to St John\\'s',\n    'post_name'    => 'home',\n    'post_content' => '[parish_dashboard]',\n    'post_status'  => 'publish',\n    'post_type'    => 'page'\n]);\n\nif ($home_id && !is_wp_error($home_id)) {\n    update_option('show_on_front', 'page');\n    update_option('page_on_front', $home_id);\n}\n\necho 'Setup complete.';\n"
+    }
+  ]
+}
