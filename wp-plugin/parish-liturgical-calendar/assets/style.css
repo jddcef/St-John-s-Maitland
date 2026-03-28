@@ -1,0 +1,340 @@
+/*
+ * Parish Liturgical Calendar — Frontend Styles
+ * Version: 1.0.0
+ *
+ * Design tokens use the CSS custom property --plc-color, set inline on each
+ * component to the liturgical colour of the current season. Fall-backs are
+ * provided for browsers that don't support custom properties.
+ *
+ * Seasons → classes applied to wrapper elements:
+ *   .plc-season-advent          violet  #6b3fa0
+ *   .plc-season-christmas       white   #c8a84b  (golden tone for white season)
+ *   .plc-season-ordinary_early
+ *   .plc-season-ordinary_later  green   #2d6a4f
+ *   .plc-season-lent            violet  #6b3fa0
+ *   .plc-season-triduum         deep red/dark
+ *   .plc-season-easter          white/gold
+ *
+ * Colour classes:
+ *   .plc-color-purple .plc-color-rose .plc-color-white
+ *   .plc-color-green  .plc-color-red
+ */
+
+/* ── Reset / base ─────────────────────────────────────────────────────────── */
+
+.plc-season-banner,
+.plc-dashboard,
+.plc-events,
+.plc-widget-inner {
+	box-sizing: border-box;
+	font-family: inherit;
+	line-height: 1.6;
+}
+
+/* ── Season Banner ────────────────────────────────────────────────────────── */
+
+.plc-season-banner {
+	display: flex;
+	align-items: stretch;
+	border-radius: 4px;
+	overflow: hidden;
+	margin: 1.5em 0;
+	background: #fafafa;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.plc-season-banner__stripe {
+	width: 6px;
+	flex-shrink: 0;
+	background: var(--plc-color, #888);
+}
+
+.plc-season-banner__body {
+	padding: 1em 1.25em;
+	flex: 1;
+}
+
+.plc-season-banner__header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.5em;
+	margin-bottom: 0.35em;
+}
+
+.plc-season-banner__label {
+	font-size: 1.25em;
+	font-weight: 700;
+	color: var(--plc-color, #333);
+}
+
+.plc-season-banner__week,
+.plc-season-banner__colour {
+	font-size: 0.82em;
+	color: #666;
+}
+
+.plc-season-banner__special {
+	font-style: italic;
+	font-size: 0.95em;
+	color: var(--plc-color, #555);
+	margin: 0.25em 0;
+}
+
+.plc-season-banner__description {
+	font-size: 0.9em;
+	color: #444;
+	margin: 0.5em 0 0;
+	max-width: 65ch;
+}
+
+.plc-season-banner__cycle {
+	font-size: 0.8em;
+	color: #888;
+	margin: 0.5em 0 0;
+}
+
+.plc-season-banner__next {
+	font-size: 0.82em;
+	color: #777;
+	margin: 0.6em 0 0;
+}
+
+/* ── Dashboard ────────────────────────────────────────────────────────────── */
+
+.plc-dashboard {
+	margin: 1.5em 0;
+	border-radius: 6px;
+	overflow: hidden;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+	background: #fff;
+}
+
+/* Season banner across full width */
+.plc-dashboard__season-banner {
+	padding: 1.25em 1.5em 1em;
+	background: #f8f7f5;
+}
+
+.plc-dashboard__season-inner {
+	display: flex;
+	gap: 1em;
+	align-items: flex-start;
+}
+
+.plc-dashboard__season-swatch {
+	width: 8px;
+	min-height: 3em;
+	flex-shrink: 0;
+	border-radius: 3px;
+	background: var(--plc-color, #888);
+	align-self: stretch;
+}
+
+.plc-dashboard__season-name {
+	font-size: 1.4em;
+	font-weight: 700;
+	color: var(--plc-color, #333);
+	margin: 0 0 0.2em;
+	line-height: 1.2;
+}
+
+.plc-dashboard__week {
+	font-weight: 400;
+	font-size: 0.75em;
+	color: #777;
+	vertical-align: middle;
+}
+
+.plc-dashboard__special {
+	font-style: italic;
+	color: var(--plc-color, #555);
+	margin: 0.25em 0;
+}
+
+.plc-dashboard__season-desc {
+	font-size: 0.88em;
+	color: #555;
+	margin: 0.4em 0;
+	max-width: 65ch;
+}
+
+.plc-dashboard__next-season {
+	font-size: 0.82em;
+	color: #777;
+	margin: 0.4em 0 0;
+}
+
+.plc-dashboard__cycle {
+	font-size: 0.78em;
+	color: #aaa;
+	margin: 0.3em 0 0;
+}
+
+/* Grid */
+.plc-dashboard__grid {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 0;
+}
+
+@media (min-width: 640px) {
+	.plc-dashboard__grid {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+
+.plc-dashboard__col {
+	padding: 1.25em 1.5em;
+}
+
+.plc-dashboard__col + .plc-dashboard__col {
+	border-top: 1px solid #eee;
+}
+
+@media (min-width: 640px) {
+	.plc-dashboard__col + .plc-dashboard__col {
+		border-top: none;
+		border-left: 1px solid #eee;
+	}
+}
+
+.plc-dashboard__col-heading {
+	font-size: 0.8em;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.07em;
+	color: var(--plc-color, #555);
+	margin: 0 0 0.75em;
+	padding-bottom: 0.4em;
+	border-bottom: 2px solid var(--plc-color, #ddd);
+}
+
+/* ── Events list ──────────────────────────────────────────────────────────── */
+
+.plc-events__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.plc-events__item {
+	padding: 0.6em 0;
+	border-bottom: 1px solid #f0f0f0;
+}
+
+.plc-events__item:last-child {
+	border-bottom: none;
+}
+
+.plc-events__title {
+	display: block;
+	font-weight: 600;
+	color: #222;
+	text-decoration: none;
+	font-size: 0.95em;
+}
+
+.plc-events__title:hover {
+	color: var(--plc-color, #0073aa);
+	text-decoration: underline;
+}
+
+.plc-events__meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75em;
+	margin-top: 0.2em;
+}
+
+.plc-events__date,
+.plc-events__location {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3em;
+	font-size: 0.8em;
+	color: #888;
+}
+
+.plc-events__excerpt {
+	font-size: 0.82em;
+	color: #666;
+	margin: 0.3em 0 0;
+}
+
+.plc-events--empty p {
+	color: #aaa;
+	font-style: italic;
+	font-size: 0.9em;
+}
+
+/* ── Mass times ───────────────────────────────────────────────────────────── */
+
+.plc-dashboard__mass-times {
+	margin-top: 1.25em;
+}
+
+.plc-dashboard__mass-text {
+	font-size: 0.88em;
+	color: #555;
+}
+
+/* ── Bulletin button ──────────────────────────────────────────────────────── */
+
+.plc-dashboard__bulletin {
+	margin-top: 1.25em;
+}
+
+.plc-bulletin-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5em;
+	background: var(--plc-color, #0073aa);
+	color: #fff !important;
+	text-decoration: none !important;
+	padding: 0.55em 1em;
+	border-radius: 4px;
+	font-size: 0.88em;
+	font-weight: 600;
+	transition: filter 0.15s ease;
+}
+
+.plc-bulletin-btn:hover {
+	filter: brightness(1.1);
+}
+
+.plc-bulletin-link a {
+	color: var(--plc-color, #0073aa);
+	font-weight: 600;
+}
+
+/* ── Seasonal background accents ─────────────────────────────────────────── */
+
+/* Advent: subtle deep violet tint */
+.plc-season-advent .plc-dashboard__season-banner {
+	background: linear-gradient(135deg, #f5f2fa 0%, #ede7f6 100%);
+}
+
+/* Christmas / Easter: warm gold tint */
+.plc-season-christmas .plc-dashboard__season-banner,
+.plc-season-easter .plc-dashboard__season-banner {
+	background: linear-gradient(135deg, #fffdf0 0%, #fff8dc 100%);
+}
+
+/* Lent / Triduum: muted purple */
+.plc-season-lent .plc-dashboard__season-banner,
+.plc-season-triduum .plc-dashboard__season-banner {
+	background: linear-gradient(135deg, #f6f2fa 0%, #ede7f6 100%);
+}
+
+/* Ordinary Time: very light green */
+.plc-season-ordinary_early .plc-dashboard__season-banner,
+.plc-season-ordinary_later .plc-dashboard__season-banner {
+	background: linear-gradient(135deg, #f2f8f5 0%, #e8f5ed 100%);
+}
+
+/* ── Widget ───────────────────────────────────────────────────────────────── */
+
+.plc-widget-inner {
+	border-radius: 2px;
+}
