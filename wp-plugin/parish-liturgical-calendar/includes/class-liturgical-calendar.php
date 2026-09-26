@@ -32,13 +32,22 @@ class PLC_Liturgical_Calendar {
 	const COLOR_GREEN  = 'green';
 	const COLOR_RED    = 'red';
 
+	private static function offset_timezone( $offset_string ) {
+		$date = DateTimeImmutable::createFromFormat( '!P', $offset_string );
+		return ( $date instanceof DateTimeImmutable ) ? $date->getTimezone() : new DateTimeZone( 'UTC' );
+	}
+
 	private static function site_timezone() {
 		if ( function_exists( 'wp_timezone' ) ) {
 			return wp_timezone();
 		}
 
 		if ( function_exists( 'wp_timezone_string' ) ) {
-			return new DateTimeZone( wp_timezone_string() );
+			$timezone_string = wp_timezone_string();
+			if ( preg_match( '/^[+-]\d{2}:\d{2}$/', $timezone_string ) ) {
+				return self::offset_timezone( $timezone_string );
+			}
+			return new DateTimeZone( $timezone_string );
 		}
 
 		$timezone_string = get_option( 'timezone_string', '' );
@@ -51,7 +60,7 @@ class PLC_Liturgical_Calendar {
 		$offset_minutes = (int) round( abs( $offset ) * 60 );
 		$offset_hours   = intdiv( $offset_minutes, 60 );
 		$offset_minutes = $offset_minutes % 60;
-		return new DateTimeZone( sprintf( '%s%02d:%02d', $offset_sign, $offset_hours, $offset_minutes ) );
+		return self::offset_timezone( sprintf( '%s%02d:%02d', $offset_sign, $offset_hours, $offset_minutes ) );
 	}
 
 	private static function site_date( $date_string ) {
