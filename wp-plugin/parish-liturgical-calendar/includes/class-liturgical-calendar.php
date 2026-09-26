@@ -33,7 +33,21 @@ class PLC_Liturgical_Calendar {
 	const COLOR_RED    = 'red';
 
 	private static function site_timezone() {
-		return new DateTimeZone( get_option( 'timezone_string', 'Africa/Johannesburg' ) ?: 'Africa/Johannesburg' );
+		if ( function_exists( 'wp_timezone' ) ) {
+			return wp_timezone();
+		}
+
+		$timezone_string = get_option( 'timezone_string', '' );
+		if ( $timezone_string ) {
+			return new DateTimeZone( $timezone_string );
+		}
+
+		$offset        = (float) get_option( 'gmt_offset', 0 );
+		$offset_sign   = ( $offset < 0 ) ? '-' : '+';
+		$offset_abs    = abs( $offset );
+		$offset_hours  = (int) floor( $offset_abs );
+		$offset_minutes = (int) round( ( $offset_abs - $offset_hours ) * 60 );
+		return new DateTimeZone( sprintf( '%s%02d:%02d', $offset_sign, $offset_hours, $offset_minutes ) );
 	}
 
 	private static function site_date( $date_string ) {
