@@ -32,9 +32,17 @@ class PLC_Liturgical_Calendar {
 	const COLOR_GREEN  = 'green';
 	const COLOR_RED    = 'red';
 
+	private static function safe_timezone( $timezone_string, $fallback = 'UTC' ) {
+		try {
+			return new DateTimeZone( $timezone_string );
+		} catch ( Exception $e ) {
+			return new DateTimeZone( $fallback );
+		}
+	}
+
 	private static function offset_timezone( $offset_string ) {
 		$date = DateTimeImmutable::createFromFormat( '!P', $offset_string );
-		return ( $date instanceof DateTimeImmutable ) ? $date->getTimezone() : new DateTimeZone( 'UTC' );
+		return ( $date instanceof DateTimeImmutable ) ? $date->getTimezone() : self::safe_timezone( 'UTC' );
 	}
 
 	private static function site_timezone() {
@@ -48,13 +56,13 @@ class PLC_Liturgical_Calendar {
 				if ( preg_match( '/^[+-]\d{2}:\d{2}$/', $timezone_string ) ) {
 					return self::offset_timezone( $timezone_string );
 				}
-				return new DateTimeZone( $timezone_string );
+				return self::safe_timezone( $timezone_string );
 			}
 		}
 
 		$timezone_string = get_option( 'timezone_string', '' );
 		if ( $timezone_string ) {
-			return new DateTimeZone( $timezone_string );
+			return self::safe_timezone( $timezone_string );
 		}
 
 		$offset         = (float) get_option( 'gmt_offset', 0 );
