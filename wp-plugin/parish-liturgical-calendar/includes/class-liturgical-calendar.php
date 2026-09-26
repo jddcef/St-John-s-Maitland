@@ -44,10 +44,12 @@ class PLC_Liturgical_Calendar {
 
 		if ( function_exists( 'wp_timezone_string' ) ) {
 			$timezone_string = wp_timezone_string();
-			if ( preg_match( '/^[+-]\d{2}:\d{2}$/', $timezone_string ) ) {
-				return self::offset_timezone( $timezone_string );
+			if ( $timezone_string ) {
+				if ( preg_match( '/^[+-]\d{2}:\d{2}$/', $timezone_string ) ) {
+					return self::offset_timezone( $timezone_string );
+				}
+				return new DateTimeZone( $timezone_string );
 			}
-			return new DateTimeZone( $timezone_string );
 		}
 
 		$timezone_string = get_option( 'timezone_string', '' );
