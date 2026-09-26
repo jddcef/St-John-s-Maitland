@@ -37,12 +37,21 @@ class PLC_Liturgical_Calendar {
 			return wp_timezone();
 		}
 
+		if ( function_exists( 'wp_timezone_string' ) ) {
+			return new DateTimeZone( wp_timezone_string() );
+		}
+
 		$timezone_string = get_option( 'timezone_string', '' );
 		if ( $timezone_string ) {
 			return new DateTimeZone( $timezone_string );
 		}
 
-		return new DateTimeZone( 'UTC' );
+		$offset         = (float) get_option( 'gmt_offset', 0 );
+		$offset_sign    = ( $offset < 0 ) ? '-' : '+';
+		$offset_minutes = (int) round( abs( $offset ) * 60 );
+		$offset_hours   = intdiv( $offset_minutes, 60 );
+		$offset_minutes = $offset_minutes % 60;
+		return new DateTimeZone( sprintf( '%s%02d:%02d', $offset_sign, $offset_hours, $offset_minutes ) );
 	}
 
 	private static function site_date( $date_string ) {
