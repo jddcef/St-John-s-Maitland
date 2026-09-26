@@ -122,7 +122,7 @@ A self-contained PHP test file with no dependencies is included:
 php tests/test-liturgical-calendar.php
 ```
 
-Expected output: 57 tests, 0 failures.
+Expected output: all tests pass with 0 failures.
 
 ---
 
@@ -145,7 +145,7 @@ parish-liturgical-calendar/
 │   ├── style.css                      ← Frontend styles (seasonal colours)
 │   └── script.js                      ← Countdown timers (no jQuery)
 └── tests/
-    └── test-liturgical-calendar.php   ← 57-assertion test suite
+    └── test-liturgical-calendar.php   ← self-contained regression test suite
 ```
 
 ---
@@ -175,4 +175,4 @@ Yes — it is recalculated on every page load. There is no cron job or cache to 
 - Shortcodes: `[parish_dashboard]`, `[liturgical_season]`, `[parish_events]`, `[parish_recent]`, `[parish_bulletin]`.
 - Sidebar widget.
 - Admin settings page with season preview.
-- 57-test suite covering Easter algorithm and all season/colour/special-day logic.
+- Self-contained regression suite covering Easter algorithm and season/colour/special-day logic.

@@ -26,6 +26,7 @@ if ( ! function_exists( 'get_option' ) ) {
 if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', __DIR__ . '/' );
 }
+date_default_timezone_set( 'UTC' );
 if ( ! function_exists( '__' ) ) {
 	function __( $text, $domain = '' ) {
 		return $text;
@@ -95,6 +96,7 @@ $known_advents = array(
 	2024 => '2024-12-01',
 	2025 => '2025-11-30',
 	2026 => '2026-11-29',
+	2027 => '2027-11-28',
 );
 foreach ( $known_advents as $year => $expected ) {
 	$a = PLC_Liturgical_Calendar::advent_start( $year );
@@ -108,6 +110,7 @@ $known_baptisms = array(
 	2024 => '2024-01-07', // Epiphany Jan 6 (Sat) → next Sunday Jan 7
 	2025 => '2025-01-12',
 	2026 => '2026-01-11',
+	2027 => '2027-01-10',
 );
 foreach ( $known_baptisms as $year => $expected ) {
 	$b = PLC_Liturgical_Calendar::baptism_of_lord( $year );
@@ -133,6 +136,10 @@ $result = PLC_Liturgical_Calendar::get_season( new DateTime( '2024-12-25' ) );
 assert_equals( PLC_Liturgical_Calendar::SEASON_CHRISTMAS, $result['season'], 'Dec 25 is Christmas' );
 assert_equals( PLC_Liturgical_Calendar::COLOR_WHITE, $result['color'], 'Christmas colour is white' );
 assert_contains( 'Nativity', $result['special_day'], 'Dec 25 special day = Nativity' );
+
+$result = PLC_Liturgical_Calendar::get_season( new DateTime( '2026-01-01' ) );
+assert_equals( PLC_Liturgical_Calendar::SEASON_CHRISTMAS, $result['season'], 'Jan 1 2026 remains Christmas Time' );
+assert_contains( 'Mary, Mother of God', $result['special_day'], 'Jan 1 2026 = Mary, Mother of God' );
 
 section( 'Season detection — Lent' );
 // Ash Wednesday 2025 = March 5
@@ -196,6 +203,10 @@ assert_contains( 'All Saints', $result['special_day'], 'Nov 1 = All Saints' );
 $result = PLC_Liturgical_Calendar::get_season( new DateTime( '2025-11-23' ) );
 assert_contains( 'King', $result['special_day'], 'Nov 23 2025 = Christ the King' );
 
+$result = PLC_Liturgical_Calendar::get_season( new DateTime( '2025-12-08' ) );
+assert_contains( 'Immaculate Conception', $result['special_day'], 'Dec 8 2025 = Immaculate Conception' );
+assert_equals( PLC_Liturgical_Calendar::COLOR_WHITE, $result['color'], 'Immaculate Conception colour = White' );
+
 section( 'Sunday Cycle' );
 // Liturgical year 2023-2024 = Cycle B (2023 mod 3 = ?); 2024-2025 = C; 2025-2026 = A
 $result = PLC_Liturgical_Calendar::get_season( new DateTime( '2024-06-15' ) ); // within year starting Advent 2023
@@ -206,6 +217,43 @@ assert_equals( 'C', $result['year_cycle'], 'Liturgical year 2024-2025 = Cycle C'
 
 $result = PLC_Liturgical_Calendar::get_season( new DateTime( '2025-12-01' ) ); // Advent 2025 starts year
 assert_equals( 'A', $result['year_cycle'], 'Liturgical year 2025-2026 = Cycle A' );
+
+$result = PLC_Liturgical_Calendar::get_season( new DateTime( '2026-11-29' ) ); // Advent 2026 starts year
+assert_equals( 'B', $result['year_cycle'], 'Liturgical year 2026-2027 = Cycle B' );
+
+$result = PLC_Liturgical_Calendar::get_season( new DateTime( '2027-11-28' ) ); // Advent 2027 starts year
+assert_equals( 'C', $result['year_cycle'], 'Liturgical year 2027-2028 = Cycle C' );
+
+section( 'Season boundaries — timezone and next season' );
+$result = PLC_Liturgical_Calendar::get_season( new DateTime( '2025-11-29 22:30:00', new DateTimeZone( 'UTC' ) ) );
+assert_equals( PLC_Liturgical_Calendar::SEASON_ADVENT, $result['season'], 'UTC instant after local midnight follows site-timezone Advent boundary' );
+assert_equals( 'A', $result['year_cycle'], 'UTC instant after local midnight uses Advent 2025 Sunday cycle' );
+
+$result = PLC_Liturgical_Calendar::get_season( new DateTime( '2025-12-26' ) );
+assert_equals( '2026-01-12', $result['next_season']['date']->format( 'Y-m-d' ), 'Dec 26 2025 next season starts Monday after Baptism 2026' );
+
+$result = PLC_Liturgical_Calendar::get_season( new DateTime( '2026-01-01' ) );
+assert_equals( '2026-01-12', $result['next_season']['date']->format( 'Y-m-d' ), 'Jan 1 2026 next season starts Monday after Baptism 2026' );
+
+$result = PLC_Liturgical_Calendar::get_season( new DateTime( '2026-02-18' ) );
+assert_equals( PLC_Liturgical_Calendar::SEASON_LENT, $result['season'], 'Feb 18 2026 = Lent (Ash Wednesday boundary)' );
+
+$result = PLC_Liturgical_Calendar::get_season( new DateTime( '2026-04-05' ) );
+assert_equals( PLC_Liturgical_Calendar::SEASON_EASTER, $result['season'], 'Apr 5 2026 = Easter Sunday boundary' );
+
+$result = PLC_Liturgical_Calendar::get_season( new DateTime( '2026-05-24' ) );
+assert_equals( PLC_Liturgical_Calendar::SEASON_EASTER, $result['season'], 'May 24 2026 = Easter Time (Pentecost)' );
+assert_contains( 'Pentecost', $result['special_day'], 'May 24 2026 = Pentecost Sunday' );
+
+$result = PLC_Liturgical_Calendar::get_season( new DateTime( '2027-02-10' ) );
+assert_equals( PLC_Liturgical_Calendar::SEASON_LENT, $result['season'], 'Feb 10 2027 = Lent (Ash Wednesday boundary)' );
+
+$result = PLC_Liturgical_Calendar::get_season( new DateTime( '2027-03-28' ) );
+assert_equals( PLC_Liturgical_Calendar::SEASON_EASTER, $result['season'], 'Mar 28 2027 = Easter Sunday boundary' );
+
+$result = PLC_Liturgical_Calendar::get_season( new DateTime( '2027-05-16' ) );
+assert_equals( PLC_Liturgical_Calendar::SEASON_EASTER, $result['season'], 'May 16 2027 = Easter Time (Pentecost)' );
+assert_contains( 'Pentecost', $result['special_day'], 'May 16 2027 = Pentecost Sunday' );
 
 section( 'Moveable feasts list' );
 $feasts = PLC_Liturgical_Calendar::moveable_feasts( 2025 );

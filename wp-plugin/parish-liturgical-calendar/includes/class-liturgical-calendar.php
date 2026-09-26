@@ -32,6 +32,14 @@ class PLC_Liturgical_Calendar {
 	const COLOR_GREEN  = 'green';
 	const COLOR_RED    = 'red';
 
+	private static function site_timezone() {
+		return new DateTimeZone( get_option( 'timezone_string', 'Africa/Johannesburg' ) ?: 'Africa/Johannesburg' );
+	}
+
+	private static function site_date( $date_string ) {
+		return new DateTime( $date_string, self::site_timezone() );
+	}
+
 	/**
 	 * Returns the Easter Sunday date for the given year (Gregorian calendar).
 	 * Uses the Butcher / Meeus–Jones–Butcher algorithm.
@@ -54,7 +62,7 @@ class PLC_Liturgical_Calendar {
 		$m = intdiv( $a + 11 * $h + 22 * $l, 451 );
 		$month = intdiv( $h + $l - 7 * $m + 114, 31 );
 		$day   = ( ( $h + $l - 7 * $m + 114 ) % 31 ) + 1;
-		return new DateTime( sprintf( '%04d-%02d-%02d', $year, $month, $day ) );
+		return self::site_date( sprintf( '%04d-%02d-%02d', $year, $month, $day ) );
 	}
 
 	/**
@@ -66,7 +74,7 @@ class PLC_Liturgical_Calendar {
 	 */
 	public static function advent_start( $year ) {
 		// Find the Sunday on or before 3 December (= 4 Sundays before 25 Dec)
-		$christmas = new DateTime( "$year-12-25" );
+		$christmas = self::site_date( "$year-12-25" );
 		$dow       = (int) $christmas->format( 'N' ); // 1=Mon … 7=Sun
 		$days_back  = ( $dow === 7 ) ? 28 : $dow + 21;
 		$advent     = clone $christmas;
@@ -94,8 +102,10 @@ class PLC_Liturgical_Calendar {
 	 */
 	public static function get_season( DateTime $date = null ) {
 		if ( ! $date ) {
-			$tz   = new DateTimeZone( get_option( 'timezone_string', 'Africa/Johannesburg' ) ?: 'Africa/Johannesburg' );
-			$date = new DateTime( 'now', $tz );
+			$date = new DateTime( 'now', self::site_timezone() );
+		} else {
+			$date = clone $date;
+			$date->setTimezone( self::site_timezone() );
 		}
 		$date->setTime( 0, 0, 0 ); // normalise to midnight
 
@@ -115,8 +125,8 @@ class PLC_Liturgical_Calendar {
 		$advent_prev = $keys_prev['advent_start'];
 
 		// ── 2. Christmas Time  (Christmas → Baptism of the Lord) ─────────
-		$christmas      = new DateTime( "{$year}-12-25" );
-		$christmas_prev = new DateTime( ( $year - 1 ) . '-12-25' );
+		$christmas      = self::site_date( "{$year}-12-25" );
+		$christmas_prev = self::site_date( ( $year - 1 ) . '-12-25' );
 
 		// ── Determine season ──────────────────────────────────────────────
 
@@ -132,6 +142,7 @@ class PLC_Liturgical_Calendar {
 			// ─ Advent (this year) ─
 			$season = self::SEASON_ADVENT;
 			$week   = self::advent_week( $date, $advent_this );
+			$special_day = self::special_day_fixed( $date );
 			if ( $week === 3 ) {
 				$gaudete = self::nth_sunday_of_advent( $advent_this, 3 );
 				if ( $date->format( 'Y-m-d' ) === $gaudete->format( 'Y-m-d' ) ) {
@@ -201,6 +212,7 @@ class PLC_Liturgical_Calendar {
 				// ─ Christmas Time (carrying over from prior year) ─
 				$season = self::SEASON_CHRISTMAS;
 				$d = $date->format( 'Y-m-d' );
+				$special_day = self::special_day_fixed( $date );
 				if ( $d === $christmas_prev->format( 'Y-m-d' ) ) {
 					$special_day = __( 'The Nativity of the Lord', 'parish-liturgical-calendar' );
 				} elseif ( $d === $baptism_this_year->format( 'Y-m-d' ) ) {
@@ -238,6 +250,7 @@ class PLC_Liturgical_Calendar {
 		if ( $ts >= $christmas->getTimestamp() ) {
 			$season = self::SEASON_CHRISTMAS;
 			$d = $date->format( 'Y-m-d' );
+			$special_day = self::special_day_fixed( $date );
 			if ( $d === $christmas->format( 'Y-m-d' ) ) {
 				$special_day = __( 'The Nativity of the Lord', 'parish-liturgical-calendar' );
 			}
@@ -270,7 +283,7 @@ class PLC_Liturgical_Calendar {
 		$weekday_cycle = ( ( $liturgical_year_start % 2 ) === 1 ) ? 'I' : 'II';
 
 		// ── Next season info ──────────────────────────────────────────────
-		$next = self::next_season_info( $season, $year, $keys_this, $keys_next );
+		$next = self::next_season_info( $season, $date, $year, $keys_this, $keys_next );
 
 		return array(
 			'season'        => $season,
@@ -318,7 +331,7 @@ class PLC_Liturgical_Calendar {
 	// ── Baptism of the Lord (end of Christmas Time) ───────────────────────
 	// The Sunday after 6 January; if 6 Jan is itself a Sunday, the following Sunday.
 	public static function baptism_of_lord( $year ) {
-		$epiphany = new DateTime( "$year-01-06" );
+		$epiphany = self::site_date( "$year-01-06" );
 		$dow      = (int) $epiphany->format( 'N' ); // 1=Mon … 7=Sun
 		$days_to_sunday = ( 7 - $dow ) % 7;
 		if ( $days_to_sunday === 0 ) {
@@ -385,6 +398,9 @@ class PLC_Liturgical_Calendar {
 	private static function season_color( $season, DateTime $date, $week ) {
 		switch ( $season ) {
 			case self::SEASON_ADVENT:
+				if ( $date->format( 'md' ) === '1208' ) {
+					return self::COLOR_WHITE;
+				}
 				return ( $week === 3 && (int) $date->format( 'N' ) === 7 )
 					? self::COLOR_ROSE
 					: self::COLOR_PURPLE;
@@ -513,7 +529,7 @@ class PLC_Liturgical_Calendar {
 
 	// ── Next season ────────────────────────────────────────────────────────
 
-	private static function next_season_info( $current_season, $year, array $keys, array $keys_next ) {
+	private static function next_season_info( $current_season, DateTime $current_date, $year, array $keys, array $keys_next ) {
 		$map = array(
 			self::SEASON_ADVENT         => array( 'season' => self::SEASON_CHRISTMAS,      'date_key' => 'christmas' ),
 			self::SEASON_CHRISTMAS      => array( 'season' => self::SEASON_ORDINARY_EARLY, 'date_key' => 'baptism' ),
@@ -533,9 +549,10 @@ class PLC_Liturgical_Calendar {
 
 		$date = null;
 		if ( $next_key === 'christmas' ) {
-			$date = new DateTime( "$year-12-25" );
+			$date = self::site_date( "$year-12-25" );
 		} elseif ( $next_key === 'baptism' ) {
-			$date = self::baptism_of_lord( $year + 1 );
+			$baptism_year = ( $current_date->format( 'n' ) === '12' ) ? $year + 1 : $year;
+			$date         = self::days_offset( self::baptism_of_lord( $baptism_year ), 1 );
 		} elseif ( $next_key === 'pentecost_next_day' ) {
 			$date = self::days_offset( $keys['pentecost'], 1 );
 		} elseif ( $next_key === 'advent_next' ) {
